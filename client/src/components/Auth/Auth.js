@@ -1,23 +1,32 @@
 import React, { useState } from 'react'
-import { Avatar, Button, Paper, Grid, Typography, Container, TextField } from '@material-ui/core'
+import { Avatar, Button, Paper, Grid, Typography, Container } from '@material-ui/core'
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined'
 import Input from "./Input"
 import { useGoogleLogin } from '@react-oauth/google'
+import { useDispatch } from 'react-redux'
 import Icon from './Icon'
 import axios from 'axios'
+import { useNavigate} from "react-router-dom";
 
 import useStyles from './styles'
 
+const intitalState = {firstName: '', lastName: '', email: '', password: '', confirmPassword: ''}
+
 const Auth = () => {
 	const classes = useStyles()
+	const dispatch = useDispatch()
 	const [isSignup, setIsSignUp] = useState(false)
 	const [showPassword, setShowPassword] = useState(false)
+	const [formData, setFormData] = useState(intitalState)
+	const navigate = useNavigate()
 
-	const handleSubmit = () => {
-
+	const handleSubmit = (e) => {
+		e.preventDefault()
+		console.log(formData)
 	}
-	const handleChange = () => {
 
+	const handleChange = (e) => {
+		setFormData({...formData, [e.target.name]: e.target.value})
 	}
 
 	const handleShowPassword = () => {
@@ -30,12 +39,21 @@ const Auth = () => {
 	}
 
 	const googleSuccess = async (tokenResponse) => {
-		const result = await axios
+		const tokenData = await axios
         .get('https://www.googleapis.com/oauth2/v3/userinfo', {
           headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
         })
 		
-		console.log(result.data)
+		const result = tokenData?.data
+		const access_token = tokenResponse?.access_token
+		
+		try {
+			dispatch({ type: 'AUTH', data: { result, access_token}})
+			navigate('/')
+		} catch (error) {
+			console.log(error)
+		}
+		
 	}
 
 	const googleFailure = (error) => {
@@ -60,19 +78,19 @@ const Auth = () => {
 						{
 							isSignup && (
 								<>
-									<Input name="firstName" label="First Name" handleChange={handleChange} autoFocus half />
-									<Input name="lastName" label="Last Name" handleChange={handleChange} half />
+									<Input name="firstName" label="First Name" handleChange={handleChange} value={formData} autoFocus half />
+									<Input name="lastName" label="Last Name" handleChange={handleChange} value={formData} half />
 								</>
 							)
 						}
-						<Input name="email" label="Email Address" handleChange={handleChange} autoFocus={!isSignup ? true : false} type="email" />
+						<Input name="email" label="Email Address" handleChange={handleChange} value={formData} autoFocus={!isSignup ? true : false} type="email" />
 						{/* 
 						autofocuses the first time, after button switch stops autofocusing
 						"changing the value of autoFocus during the component lifecycle won't influence the focus state"
 						-possibly need to rerender whole input component
 					*/}
-						<Input name="password" label="Password" handleChange={handleChange} type={showPassword ? "text" : "password"} handleShowPassword={handleShowPassword} />
-						{isSignup && <Input name="confirmPassword" label="Repeat Password" handleChange={handleChange} type="password" />}
+						<Input name="password" label="Password" handleChange={handleChange} value={formData} type={showPassword ? "text" : "password"} handleShowPassword={handleShowPassword} />
+						{isSignup && <Input name="confirmPassword" label="Repeat Password" value={formData} handleChange={handleChange} type="password" />}
 					</Grid>
 					<Button type="submit" fullWidth variant="contained" color="primary" className={classes.submit} >
 						{isSignup ? 'Sign Up' : 'Sign In'}
