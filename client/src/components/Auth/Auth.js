@@ -6,8 +6,8 @@ import { useGoogleLogin } from '@react-oauth/google'
 import { useDispatch } from 'react-redux'
 import Icon from './Icon'
 import axios from 'axios'
-import { useNavigate} from "react-router-dom";
-
+import { useNavigate } from "react-router-dom";
+import { signin, signup } from '../../actions/auth'
 import useStyles from './styles'
 
 const intitalState = {firstName: '', lastName: '', email: '', password: '', confirmPassword: ''}
@@ -22,7 +22,11 @@ const Auth = () => {
 
 	const handleSubmit = (e) => {
 		e.preventDefault()
-		console.log(formData)
+		if(isSignup){
+			dispatch(signup(formData, navigate))
+		}else {
+			dispatch(signin(formData, navigate))
+		}
 	}
 
 	const handleChange = (e) => {
