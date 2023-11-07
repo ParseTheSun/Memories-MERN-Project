@@ -5,17 +5,17 @@ export const getPosts = async (req, res)=>{
 	try{
 		const postMessages = await PostMessage.find();
 
-		res.status(200).json(postMessages)
+		return res.status(200).json(postMessages)
 
 	} catch(error){
-		res.status(404).json({ message : error.message })
+		return res.status(404).json({ message : error.message })
 	}
 }
 
 export const createPost = async (req, res) => {
 	const post = req.body
 
-	const newPost = new PostMessage(post)
+	const newPost = new PostMessage({ ...post, creator: req.userId })
 
 	try{
 		await newPost.save()
@@ -49,11 +49,22 @@ export const deletePost = async(req, res) => {
 
 export const likePost = async(req, res) => {
 	const { id } = req.params
-	const post = req.body
+	
+	const post = await PostMessage.findById(id)
 
+	if(!req.userId) return res.json({ message: "User not signed in"})
+	
 	if(!mongoose.Types.ObjectId.isValid(id)) return res.status(404).send("No post with that id")
 
-	const likedPost = await PostMessage.findByIdAndUpdate(id, { ...post, likeCount: ++post.likeCount }, { new: true })
+	const index = post.likeCount.findIndex((id) => id === String(req.userId))
+
+	if(index === -1){
+		post.likeCount.push(req.userId)
+	}else{
+		post.likeCount = post.likeCount.filter((id) => id !== String(req.userId))
+	}
+
+	const likedPost = await PostMessage.findByIdAndUpdate(id, post, { new: true })
 	res.status(200).json(likedPost)
 
 }

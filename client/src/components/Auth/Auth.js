@@ -7,21 +7,23 @@ import { useDispatch } from 'react-redux'
 import Icon from './Icon'
 import axios from 'axios'
 import { useNavigate } from "react-router-dom";
+import { AUTH } from '../../constants/actionTypes';
 import { signin, signup } from '../../actions/auth'
 import useStyles from './styles'
 
-const intitalState = {firstName: '', lastName: '', email: '', password: '', confirmPassword: ''}
+const initialState = {firstName: '', lastName: '', email: '', password: '', confirmPassword: ''}
 
 const Auth = () => {
 	const classes = useStyles()
 	const dispatch = useDispatch()
 	const [isSignup, setIsSignUp] = useState(false)
 	const [showPassword, setShowPassword] = useState(false)
-	const [formData, setFormData] = useState(intitalState)
+	const [formData, setFormData] = useState(initialState)
 	const navigate = useNavigate()
 
 	const handleSubmit = (e) => {
 		e.preventDefault()
+
 		if(isSignup){
 			dispatch(signup(formData, navigate))
 		}else {
@@ -38,8 +40,9 @@ const Auth = () => {
 	}
 
 	const switchMode = () => {
-		setIsSignUp((prevIsSignUp) => !prevIsSignUp)
-		setShowPassword(false)
+		setFormData(initialState);
+		setIsSignUp((prevIsSignUp) => !prevIsSignUp);
+		setShowPassword(false);
 	}
 
 	const googleSuccess = async (tokenResponse) => {
@@ -49,10 +52,10 @@ const Auth = () => {
         })
 		
 		const result = tokenData?.data
-		const access_token = tokenResponse?.access_token
+		const token = tokenResponse?.access_token
 		
 		try {
-			dispatch({ type: 'AUTH', data: { result, access_token}})
+			dispatch({ type: AUTH, payload: { result, token}})
 			navigate('/')
 		} catch (error) {
 			console.log(error)
