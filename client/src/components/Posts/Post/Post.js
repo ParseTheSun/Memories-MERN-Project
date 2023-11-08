@@ -1,11 +1,13 @@
 import React from 'react'
 import { Card, CardActions, CardContent, CardMedia, Button, Typography } from '@material-ui/core'
 import { useDispatch } from "react-redux";
+import { useState, useEffect} from 'react'
+import { useLocation } from "react-router-dom";
 import { deletePost, likePost } from '../../../actions/posts';
 import ThumbUpAltIcon from '@mui/icons-material/ThumbUpAlt';
 import ThumbUpAltOutlined from '@mui/icons-material/ThumbUpAltOutlined';
 import DeleteIcon from '@mui/icons-material/Delete'
-import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
+import EditIcon from '@mui/icons-material/Edit';
 import moment from 'moment'
 
 import useStyles from './styles'
@@ -13,7 +15,12 @@ import useStyles from './styles'
 const Post = ({ post, setCurrentId }) => {
 	const classes = useStyles()
 	const dispatch = useDispatch()
-	const user = JSON.parse(localStorage.getItem('profile'));
+	const location = useLocation()
+	const [user, setUser] = useState(JSON.parse(localStorage.getItem('profile')));
+
+	useEffect(() => {
+		setUser(JSON.parse(localStorage.getItem('profile')))
+	}, [location])
 
 	const removePost = () => {
 		dispatch(deletePost(post._id))
@@ -41,8 +48,8 @@ const Post = ({ post, setCurrentId }) => {
 				<Typography variant="body2">{moment(post.createdAt).fromNow()}</Typography>
 			</div>
 			<div className={classes.overlay2}>
-				<Button style={{ color: 'white' }} size="small" onClick={() => setCurrentId(post._id)}>
-					<MoreHorizIcon fontSize="medium" />
+				<Button style={{color: user?.result._id !== post.creator ? 'grey' : 'white' }} size="small" disabled={user?.result._id !== post.creator} onClick={() => setCurrentId(post._id)}>
+					<EditIcon fontSize="medium" />
 				</Button>
 			</div>
 			<div className={classes.details}>
@@ -56,10 +63,12 @@ const Post = ({ post, setCurrentId }) => {
 				<Button size="small" color="primary" disabled={!user?.result} onClick={() => { like() }}>
 					<Likes />
 				</Button>
+				{ user?.result._id === post.creator && (
 				<Button size="small" color="primary" onClick={() => { removePost() }}>
 					<DeleteIcon fontSize="small" />
 					&nbsp; Delete
 				</Button>
+				)}
 			</CardActions>
 		</Card>
 	)
